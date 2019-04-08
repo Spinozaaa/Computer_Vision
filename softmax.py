@@ -16,14 +16,14 @@ def load_CIFAR_batch(filename):
     x = datadict[b'data']
     Y = datadict[b'labels']#python2 b
 
-    x = np.array([hog(rgb2gray(reshapeData(img)), orientations=8, pixels_per_cell=(8, 8),
-                    cells_per_block=(3, 3), block_norm='L2') for img in datadict[b'data']])#hog
+    # x = np.array([hog(rgb2gray(reshapeData(img)), orientations=8, pixels_per_cell=(8, 8),
+    #                 cells_per_block=(3, 3), block_norm='L2') for img in datadict[b'data']])#hog
     # print("xshape", x.shape)
     # settings for LBP
     # radius = 3
     # n_points = 8 * radius
     # x = np.array([local_binary_pattern(rgb2gray(reshapeData(img)), n_points, radius) for img in datadict[b'data']])#lbp
-    # x = x.reshape(10000, 3, 32, 32).transpose(0,2,3,1).astype("float")#rgb
+    x = x.reshape(10000, 3, 32, 32).transpose(0,2,3,1).astype("float")#rgb
     Y = np.array(Y)
     return x, Y
 
@@ -68,9 +68,9 @@ def cutData(num_training, num_test):
 def get_CIFAR10_data(num_training=10000, num_validation=1000, num_test=2000):
     x_train, y_train, x_test, y_test = cutData(num_training + num_validation, num_test)
     # 标准化数据：先求平均图像，再将每个图像都减去其平均图像，这样的预处理会加速后期最优化过程中权重参数的收敛性
-    # mean_image = np.mean(x_train, axis = 0)
-    # x_train -= mean_image
-    # x_test -= mean_image
+    mean_image = np.mean(x_train, axis = 0)
+    x_train -= mean_image
+    x_test -= mean_image
 
     mask = list(range(num_training, num_training + num_validation))
     x_val = x_train[mask]
@@ -115,23 +115,23 @@ def softmax(x, y, W, b, reg):
 x_train, y_train, x_val, y_val, x_test, y_test = get_CIFAR10_data()
 
 def get_result(x_train, y_train, x_test, y_test):
-    # W = np.random.randn(x_train.shape[1], 10) * 0.0001 #rgb
-    # b = np.random.randn(1, 10) * 0.0001
-    W = np.random.randn(x_train.shape[1], 10) * 0.01 #hog
-    b = np.random.randn(1, 10) * 0.01
+    W = np.random.randn(x_train.shape[1], 10) * 0.0001 #rgb
+    b = np.random.randn(1, 10) * 0.0001
+    # W = np.random.randn(x_train.shape[1], 10) * 0.01 #hog
+    # b = np.random.randn(1, 10) * 0.01
 
     # print('w size', W.size)
 
     NUM_EPOCHS = 50
     dev_num = int(x_train.shape[0]/50)
-    # step_size = 0.0000045#rgb
-    step_size = 0.07#hog
+    step_size = 0.0000042#rgb
+    # step_size = 0.07#hog
     best_w = W
     best_b = b
     lastAcc = 1
     
-    # reg = 1e-6#rgb
-    reg = 0#hog
+    reg = 1e-6#rgb
+    # reg = 0#hog
 
     for epoch in range(NUM_EPOCHS):
       for i in range(int(x_train.shape[0]/dev_num)):
